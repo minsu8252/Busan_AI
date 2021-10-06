@@ -2,18 +2,12 @@
 <html lang="en">
 <body>
 <div class="container">
-    <!-- <div class="row"> -->
     <div class="row" style="position: absolute;">
-        <!-- <div class="col-lg-8 offset-lg-2"> -->
-        <div class="col-lg-8 offset-lg-2" style='position: relative; top: 120px; left: 76px;'>
-            <h2 class='mt-5'>CAMERA APP</h2>
-            
-            <img src="{{ url_for('video_feed') }}" height="80%">
+        <div class="col-lg-8 offset-lg-2" style='position: relative; left: 100px;' id = 'para'>
+
         </div>
     </div>
     <div style="position: absolute;">
-        <div style="position: relative; top:300px; left: 300px;" id="para">
-        </div>
     </div>
 </div>
 <script>
@@ -24,6 +18,12 @@
         var ss = today.getSeconds();
         document.getElementById("para").innerHTML = hh + ":" + mm + ":" + ss;
     }
+     
+    setTimeout(function(){
+        var elem = document.getElementById('para');
+        elem.innerHTML='<img src="{{ url_for('video_feed') }}" height="80%">'
+    },2000 
+    )
 
 </script> 
 </body>
