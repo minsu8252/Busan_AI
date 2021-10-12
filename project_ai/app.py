@@ -19,7 +19,6 @@ app = Flask(__name__)
 ret = cap.set(3,1280) # 캠 가로 크기
 ret = cap.set(4,720) # 캠 세로 크기
 
-back = np.full((720, 1280, 3), 0, np.uint8) # 겹칠 이미지 배경
 
 # 프레임에서 사람 인식하여 다시 표시
 def gen_frames():
@@ -31,6 +30,8 @@ def gen_frames():
                 continue
 
             original_image = image.copy()
+
+            back = np.full((720, 1280, 3), 0, np.uint8) # 겹칠 이미지 배경
 
             image = cv2.cvtColor(cv2.flip(image, 1), cv2.COLOR_BGR2RGB)
             image.flags.writeable = False
@@ -55,16 +56,27 @@ def gen_frames():
 
                 image = cv2.putText(image, 'CLASS', (95,12), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 1, cv2.LINE_AA)
                 image =cv2.putText(image, model_pose_class, (95,40), cv2.FONT_HERSHEY_SIMPLEX,0.8, (255,255,255), 1, cv2.LINE_AA)
-              
+                
+                landmarks = results.pose_landmarks.landmark    
+        
+                left_hip = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x, landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
+
+                right_hip = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
+
+                center_hip= [round((left_hip[0] + right_hip[0])/2*1280), round((left_hip[1] + right_hip[1])/2*720)]
+
                 # 추천 이미지 겹치기
                 pic=cv2.imread(f'results/{model_pose_class}.png', cv2.IMREAD_COLOR)
+                pic = cv2.flip(pic, 1)
                 width = pic.shape[1]
                 height = pic.shape[0]
-                r_width = round(width*2) # 겹칠 이미지 너비
-                r_height = round(height*2) # 겹칠 이미지 높이
+                r_width = round(width*1.8) # 겹칠 이미지 너비
+                r_height = round(height*1.8) # 겹칠 이미지 높이
                 pic2 = cv2.resize(pic, (r_width, r_height))
 
-                x, y = 20, 406 # 겹칠 이미지 시작 좌표
+                # 겹칠 이미지 시작 좌표
+                y = round(center_hip[0] - r_width/2 - 10) # 가로
+                x = round(center_hip[1] - r_height/2) # 세로
                 back[x:x+r_height, y:y+r_width] = pic2
                 image = cv2.addWeighted(image, 0.8, back, 0.2, 0)
 
@@ -131,5 +143,23 @@ if __name__ == '__main__':
 4. yield 부분 이해하기 / return과 차이 
 5. 발표자료 (ppt, 판넬) 수정
 
+
+"""
+
+"""
+가로 1280
+세로 720
+
+center_hip[0] x축 가로
+center_hip [1] y축 세로
+
+r_width 이미지 너비 (가로)
+r_height 이미지 높이 (세로)
+
+y = 가로
+x = 세로
+
+y = round(center_hip[0] - r_width/2)
+x = round(center_hip[1] - r_height/2)
 
 """
