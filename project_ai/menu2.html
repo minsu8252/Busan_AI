@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Pose for</title>
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+<link rel="stylesheet" type="text/css" href="/static/css/styles.css">
+<link rel="stylesheet" type="text/css" href="/static/css/coustom-style.css">
+<!--[if IE 6]>
+<link href="default_ie6.css" rel="stylesheet" type="text/css" />
+<![endif]-->
+</head>
+<body>
+<div>
+	<div id="header-wrapper">
+		<div id="header" class="container">
+			<div id="logo">
+				<h1 style="font-family:TheFrankline"><a href="/">Pose for</a></h1>
+			</div>
+		</div>
+	</div>
+	<div id="menu-wrapper">
+		<div id="menu" class="container">
+			<ul>
+				<li style="font-family:CreatoDisplayThin"><a href="/">Homepage</a></li>
+				<li style="font-family:CreatoDisplayThin"><a href="/service">Service</a></li>
+				<li style="font-family:CreatoDisplayThin"><a href="#">Share</a></li>
+			</ul>
+		</div>
+		<!-- end #menu -->
+	</div>
+</div>
+
+<div class="webcam">
+    <div class="row" style="position: absolute;">
+        <div class="col-lg-8 offset-lg-2" style='position: relative;'   id = 'para'>
+            <img src="{{ url_for('video_feed') }}" height="80%">
+        </div>
+    </div>
+    <div style="position: absolute;">
+    </div>
+</div>
+
+</body>
+	

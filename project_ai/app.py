@@ -1,13 +1,13 @@
-from flask import Flask, render_template, Response, send_file
+from flask import Flask, render_template, Response
 import cv2
 import numpy as np
 import mediapipe as mp
 import pickle
 
+# 학습모델 불러오기
 with open('pose.pkl', 'rb') as f:
     model = pickle.load(f)
 
-global model_pose_class
 
 mp_darwing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -16,12 +16,13 @@ cap = cv2.VideoCapture(0)
 
 app = Flask(__name__)
 
-ret = cap.set(3,1920)
-ret = cap.set(4,1080)
+ret = cap.set(3,1280) # 캠 가로 크기
+ret = cap.set(4,720) # 캠 세로 크기
+
+back = np.full((720, 1280, 3), 0, np.uint8) # 겹칠 이미지 배경
 
 # 프레임에서 사람 인식하여 다시 표시
 def gen_frames():
-    global model_pose_class
     with mp_pose.Pose(min_detection_confidence = 0.5, min_tracking_confidence = 0.5) as pose:
         while cap.isOpened():
             ret , image = cap.read() #프레임을 제대로 읽으면 ret = true 아니면 false / 읽은 프레임은 image
@@ -29,7 +30,7 @@ def gen_frames():
                 print('camera failed!!!')
                 continue
 
-            annotated_image = image.copy()
+            original_image = image.copy()
 
             image = cv2.cvtColor(cv2.flip(image, 1), cv2.COLOR_BGR2RGB)
             image.flags.writeable = False
@@ -41,8 +42,8 @@ def gen_frames():
 
             try:
                 X = [list(np.array([[landmark.x , landmark.y, landmark.z, landmark.visibility] for landmark in results.pose_landmarks.landmark]).flatten())]
-                model_pose_class = model.predict(X)[0]
-                model_pose_prob = model.predict_proba(X)[0]
+                model_pose_class = model.predict(X)[0] # 클래스 예측
+                model_pose_prob = model.predict_proba(X)[0] # 유사도 측정
                 prob = round(model_pose_prob[np.argmax(model_pose_prob)] * 100)
 
                 # 유사도 및 클래스 화면에 표시(나중에는 없애야하는 것)
@@ -55,11 +56,18 @@ def gen_frames():
                 image = cv2.putText(image, 'CLASS', (95,12), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 1, cv2.LINE_AA)
                 image =cv2.putText(image, model_pose_class, (95,40), cv2.FONT_HERSHEY_SIMPLEX,0.8, (255,255,255), 1, cv2.LINE_AA)
               
-                picture=cv2.imread(f'results/{model_pose_class}.png', cv2.IMREAD_COLOR)
-                width = image.shape[1]
-                height = image.shape[0]
-                picture2 = cv2.resize(picture, (width, height))
-                image = cv2.addWeighted(image, 0.8, picture2, 0.2, 0)
+                # 추천 이미지 겹치기
+                pic=cv2.imread(f'results/{model_pose_class}.png', cv2.IMREAD_COLOR)
+                width = pic.shape[1]
+                height = pic.shape[0]
+                r_width = round(width*2) # 겹칠 이미지 너비
+                r_height = round(height*2) # 겹칠 이미지 높이
+                pic2 = cv2.resize(pic, (r_width, r_height))
+
+                x, y = 20, 406 # 겹칠 이미지 시작 좌표
+                back[x:x+r_height, y:y+r_width] = pic2
+                image = cv2.addWeighted(image, 0.8, back, 0.2, 0)
+
 
             except:
                 pass
@@ -75,20 +83,16 @@ def gen_frames():
 def home():
     return render_template('home.html')
 
+@app.route('/menu')
+def menu():
+    return render_template('menu.html')
 
 @app.route('/service')
 def services():
     return render_template('service.html')
 
-
-@app.route('/index')
-def index():
-    return render_template('index.html')
-
-
 @app.route('/video_feed')
 def video_feed():
-    global model_pose_class
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 # @app.route('/image_feed')
@@ -121,10 +125,11 @@ if __name__ == '__main__':
 해야할 것
 
 1. 추천 사진 크기 조절 / 사진 저장
-2. home과 index 연결하기
+2. html 슬라이드 메뉴 / 앵커 태그
 
 3. index를 꾸미기
 4. yield 부분 이해하기 / return과 차이 
 5. 발표자료 (ppt, 판넬) 수정
+
 
 """
